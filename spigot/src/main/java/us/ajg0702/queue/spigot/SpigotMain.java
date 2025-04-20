@@ -110,7 +110,9 @@ public class SpigotMain extends JavaPlugin implements PluginMessageListener,List
 			mongoDatabase = mongoClient.getDatabase(config.getString("mongodb.database"));
 		}
 
-		Bukkit.getPluginManager().registerEvents(new InitialServerSelector(this), this);
+		InitialServerSelector initialServerSelector = new InitialServerSelector(this);
+		Bukkit.getPluginManager().registerEvents(initialServerSelector, this);
+		getCommand("lastserver").setExecutor(initialServerSelector);
 
 		getLogger().info("Spigot side enabled! v"+getDescription().getVersion());
 	}

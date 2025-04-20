@@ -42,6 +42,8 @@ public class SpigotAPI extends AjQueueSpigotAPI {
         Player p = Bukkit.getPlayer(player);
         if(p == null) throw new IllegalArgumentException("Player must be online!");
 
+        Bukkit.getScheduler().runTask(main, () -> Bukkit.getPluginManager().callEvent(new QueueAddEvent(p, queueName)));
+
         CompletableFuture<Boolean> future = new CompletableFuture<>();
 
         responseManager.awaitResponse(player.toString(), "serverqueue", response -> {
@@ -57,6 +59,7 @@ public class SpigotAPI extends AjQueueSpigotAPI {
     public void sudoQueue(UUID player, String queueName) {
         Player p = Bukkit.getPlayer(player);
         if(p == null) throw new IllegalArgumentException("Player must be online!");
+        Bukkit.getScheduler().runTask(main, () -> Bukkit.getPluginManager().callEvent(new QueueAddEvent(p, queueName)));
         main.sendMessage(p, "queue", queueName);
     }
 

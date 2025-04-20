@@ -12,3 +12,5 @@ commands:
    leavequeue:
       aliases: [leaveq]
       description: Leaves a queue
+   lastserver:
+      description: Joins the last server you were on

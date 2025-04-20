@@ -5,23 +5,67 @@ import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.ReplaceOptions;
 import org.bson.Document;
 import org.bukkit.Bukkit;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.jetbrains.annotations.NotNull;
 import us.ajg0702.queue.api.spigot.AjQueueSpigotAPI;
+import us.ajg0702.queue.spigot.api.QueueAddEvent;
 
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
-public class InitialServerSelector implements Listener {
+public class InitialServerSelector implements Listener, CommandExecutor {
 
     private final SpigotMain plugin;
 
     public InitialServerSelector(SpigotMain plugin) {
         this.plugin = plugin;
+    }
+
+    @Override
+    public boolean onCommand(@NotNull CommandSender commandSender, @NotNull Command command, @NotNull String s, @NotNull String[] strings) {
+        if (plugin.getMongoDatabase() == null || !plugin.getAConfig().getBoolean("initial-server-selector.enabled") || !(commandSender instanceof Player player)) {
+            return false;
+        }
+
+        getLastPlayerServer(player.getUniqueId())
+                .whenCompleteAsync(((lastPlayerServer, throwable) -> {
+                    if (throwable != null) {
+                        plugin.getLogger().warning("Failed to get last player server: " + throwable.getMessage());
+                        player.sendMessage("Failed to get last server, please contact an admin.");
+                        return;
+                    }
+
+                    if (lastPlayerServer == null) {
+                        return;
+                    }
+
+                    Bukkit.getScheduler().runTask(
+                            plugin,
+                            () -> AjQueueSpigotAPI.getInstance().addToQueue(player.getUniqueId(), lastPlayerServer.serverName)
+                    );
+        }));
+
+        return true;
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onQueueAdd(QueueAddEvent event) {
+        if (plugin.getMongoDatabase() == null) {
+            return;
+        }
+
+        System.out.println("Updating last player server for " + event.getPlayer().getName() + " to " + event.getServer());
+        UUID uniqueId = event.getPlayer().getUniqueId();
+        CompletableFuture.runAsync(() -> updateLastPlayerServer(uniqueId, event.getServer()));
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
@@ -61,8 +105,6 @@ public class InitialServerSelector implements Listener {
 
                             AjQueueSpigotAPI.getInstance().addToQueue(event.getPlayer().getUniqueId(), selectedServer);
                         }, 60L);
-
-                        updateLastPlayerServer(event.getPlayer().getUniqueId(), selectedServer);
                     }
         });
     }
