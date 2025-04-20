@@ -1,6 +1,6 @@
 plugins {
     `java-library`
-    id("com.github.johnrengelman.shadow")
+    id("com.gradleup.shadow").version("9.0.0-beta12")
     `maven-publish`
 }
 
@@ -33,6 +33,7 @@ tasks.shadowJar {
     relocate("io.leangen.geantyref", "us.ajg0702.queue.libs.geantyref")
     relocate("org.spongepowered", "us.ajg0702.queue.libs.sponge")
     relocate("org.yaml", "us.ajg0702.queue.libs.yaml")
+    relocate("com.mongodb", "us.ajg0702.queue.libs.mongodb")
     archiveBaseName.set("ajQueue")
     archiveClassifier.set("")
 }

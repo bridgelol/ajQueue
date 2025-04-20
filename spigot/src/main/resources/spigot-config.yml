@@ -20,3 +20,15 @@ check-proxy-response: true
 
 # Dont touch this
 config-version: 3
+
+initial-server-selector:
+  enabled: true
+  send-to-last-server: true
+  servers:
+    - 'chill:10'
+    - 'bliss:90'
+
+mongodb:
+  enabled: true
+  uri: "mongodb://127.0.0.1:27017"
+  database: "ajqueue"

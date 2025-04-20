@@ -1,3 +1,5 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+
 plugins {
     `java-library`
     id("com.github.johnrengelman.shadow")
@@ -34,7 +36,7 @@ dependencies {
     compileOnly("net.luckperms:api:5.4")
 }
 
-tasks.shadowJar {
+tasks.withType<ShadowJar> {
     relocate("us.ajg0702.utils", "us.ajg0702.queue.libs.utils")
     relocate("org.bstats", "us.ajg0702.queue.libs.bstats")
     relocate("io.leangen.geantyref", "us.ajg0702.queue.libs.geantyref")

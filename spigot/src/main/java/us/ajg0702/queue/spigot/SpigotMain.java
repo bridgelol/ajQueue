@@ -3,6 +3,12 @@ package us.ajg0702.queue.spigot;
 import com.google.common.io.ByteArrayDataInput;
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
+import com.mongodb.ConnectionString;
+import com.mongodb.MongoClientSettings;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
+import com.mongodb.client.MongoDatabase;
+import org.bson.UuidRepresentation;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
@@ -39,6 +45,8 @@ public class SpigotMain extends JavaPlugin implements PluginMessageListener,List
 	private final CompatScheduler compatScheduler = new CompatScheduler(this);
 	
 	private ConfigFile config;
+	private MongoClient mongoClient = null;
+	private MongoDatabase mongoDatabase = null;
 
 	private boolean hasProxy = false;
 	
@@ -89,6 +97,20 @@ public class SpigotMain extends JavaPlugin implements PluginMessageListener,List
 			getLogger().severe("Unable to read config:");
 			e.printStackTrace();
 		}
+
+		if (config.getBoolean("mongodb.enabled")) {
+			getLogger().info("Initializing MongoDB connection...");
+			mongoClient = MongoClients.create(MongoClientSettings
+					.builder()
+					.uuidRepresentation(UuidRepresentation.JAVA_LEGACY)
+					.applyConnectionString(new ConnectionString(config.getString("mongodb.uri")))
+					.build()
+			);
+
+			mongoDatabase = mongoClient.getDatabase(config.getString("mongodb.database"));
+		}
+
+		Bukkit.getPluginManager().registerEvents(new InitialServerSelector(this), this);
 
 		getLogger().info("Spigot side enabled! v"+getDescription().getVersion());
 	}
@@ -184,5 +206,13 @@ public class SpigotMain extends JavaPlugin implements PluginMessageListener,List
 
 	public ConfigFile getAConfig() {
 		return config;
+	}
+
+	public MongoClient getMongoClient() {
+		return mongoClient;
+	}
+
+	public MongoDatabase getMongoDatabase() {
+		return mongoDatabase;
 	}
 }
